@@ -19,4 +19,14 @@ public class UserService {
     public User findById(String id) {
         return users.get(id);
     }
+
+public User findByEmail(String email) {
+        if (email == null) return null;
+        String key = email.trim().toLowerCase();
+        for (User u : users.values()) {
+            if (u.getEmail().equals(key)) return u;
+        }
+        return null;
+    }
+
 }

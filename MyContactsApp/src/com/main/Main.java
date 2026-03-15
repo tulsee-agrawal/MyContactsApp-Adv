@@ -2,60 +2,50 @@ package com.main;
 
 import com.builder.UserBuilder;
 import com.exception.ValidationException;
-import com.model.User;
-import com.model.UserType;
-import com.service.UserService;
+import com.model.*;
+import com.service.*;
+import com.auth.*;
 
 import java.util.Scanner;
-/**
- * 1. User Management Use Cases
- * UC-01: User Registration
- * 
- * User creates an account with email, password, and profile information.
- * Factory Pattern for creating different user types (FreeUser, PremiumUser),
- *  Builder Pattern for User object construction
- *  
- * @author tagr3002
- * @version 1.0
- */
-public class Main {
+
+import java.util.Optional;
+import java.util.Scanner;
+
+public class Main{
 
     public static void main(String[] args) {
+        UserService userService = new UserService();
 
-        Scanner sc = new Scanner(System.in);
-        UserService service = new UserService();
-
+       
         try {
-            System.out.print("Enter name: ");
-            String name = sc.nextLine().trim();
-
-            System.out.print("Enter email: ");
-            String email = sc.nextLine().trim();
-
-            System.out.print("Enter password: ");
-            String password = sc.nextLine().trim();
-
-            System.out.print("Enter type (FREE or PREMIUM): ");
-            String typeInput = sc.nextLine().trim().toUpperCase();
-
-            UserType type = typeInput.equals("PREMIUM") ? UserType.PREMIUM : UserType.FREE;
-
-            User user = service.register(
-                    new UserBuilder()
-                            .name(name)
-                            .email(email)
-                            .password(password)
-                            .type(type)
+            userService.register(
+                new UserBuilder()
+                    .name("User")
+                    .email("user@example.com")
+                    .password("Pass@123")
+                    .type(UserType.FREE)
             );
+            System.out.println("Testing user: user@example.com / Pass@123");
+        } catch (ValidationException e) {
+            System.out.println("Testing failed: " + e.getMessage());
+        }
+       
+        AuthService authService = new AuthService(new BasicAuthStrategy(userService));
+        Scanner sc = new Scanner(System.in);
 
-            System.out.println("\nUser Registered Successfully!");
-            System.out.println("ID   : " + user.getId());
-            System.out.println("Name : " + user.getName());
-            System.out.println("Email: " + user.getEmail());
-            System.out.println("Type : " + user.getType());
+        System.out.print("Email: ");
+        String email = sc.nextLine().trim();
 
-        } catch (ValidationException ve) {
-            System.out.println("Error: " + ve.getMessage());
+        System.out.print("Password: ");
+        String password = sc.nextLine().trim();
+
+        Optional<String> sessionId = authService.login(email, password);
+
+        if (sessionId.isPresent()) {
+            System.out.println("\nLogin successful!");
+            System.out.println("Session ID: " + sessionId.get());
+        } else {
+            System.out.println("\nLogin failed.");
         }
 
         sc.close();
