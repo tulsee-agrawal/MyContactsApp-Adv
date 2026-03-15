@@ -39,4 +39,10 @@ public abstract class Contact {
     public ContactType getType() { return type; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+@Override
+public String toString() {
+    return String.format("%s [%s] #%s", name, type, id);
+}
+
 }

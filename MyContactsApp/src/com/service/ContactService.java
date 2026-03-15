@@ -5,6 +5,10 @@ import com.model.contacts.Contact;
 
 import java.util.*;
 
+import com.view.ContactView;
+import java.util.Optional;
+
+
 public class ContactService {
     private final Map<String, Map<String, Contact>> store = new HashMap<>();
 
@@ -32,4 +36,13 @@ public class ContactService {
         if (map == null) return false;
         return map.remove(contactId) != null;
     }
+
+public Optional<ContactView> view(String userId, String contactId) {
+    var map = store.get(userId);
+    if (map == null) return Optional.empty();
+    var c = map.get(contactId);
+    if (c == null) return Optional.empty();
+    return Optional.of(ContactView.from(c));
+}
+
 }
