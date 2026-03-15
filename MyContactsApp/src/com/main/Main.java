@@ -1,22 +1,30 @@
 package com.main;
-
+/**
+ * UC-03: User Profile Management
+ * 
+ * User updates profile information, changes password, or manages preferences.
+ * Command Pattern for profile update operations
+ * 
+ * @author tagr3002
+ * @version 3.0
+ */
+import com.auth.BasicAuthStrategy;
 import com.builder.UserBuilder;
 import com.exception.ValidationException;
-import com.model.*;
-import com.service.*;
-import com.auth.*;
-
-import java.util.Scanner;
+import com.model.User;
+import com.model.UserType;
+import com.service.AuthService;
+import com.service.ProfileService;
+import com.service.UserService;
+import com.session.SessionManager;
 
 import java.util.Optional;
 import java.util.Scanner;
 
-public class Main{
+public class Main {
 
     public static void main(String[] args) {
         UserService userService = new UserService();
-
-       
         try {
             userService.register(
                 new UserBuilder()
@@ -25,11 +33,8 @@ public class Main{
                     .password("Pass@123")
                     .type(UserType.FREE)
             );
-            System.out.println("Testing user: user@example.com / Pass@123");
-        } catch (ValidationException e) {
-            System.out.println("Testing failed: " + e.getMessage());
-        }
-       
+        } catch (ValidationException ignored) {}
+
         AuthService authService = new AuthService(new BasicAuthStrategy(userService));
         Scanner sc = new Scanner(System.in);
 
@@ -40,13 +45,37 @@ public class Main{
         String password = sc.nextLine().trim();
 
         Optional<String> sessionId = authService.login(email, password);
-
-        if (sessionId.isPresent()) {
-            System.out.println("\nLogin successful!");
-            System.out.println("Session ID: " + sessionId.get());
-        } else {
-            System.out.println("\nLogin failed.");
+        if (sessionId.isEmpty()) {
+            System.out.println("Login failed.");
+            sc.close();
+            return;
         }
+
+        String userId = SessionManager.getInstance().getUserId(sessionId.get()).orElse(null);
+        if (userId == null) {
+            System.out.println("Session error.");
+            sc.close();
+            return;
+        }
+
+        ProfileService profile = new ProfileService(userService);
+
+        System.out.print("New name (leave blank to skip): ");
+        String newName = sc.nextLine().trim();
+        if (!newName.isEmpty()) profile.updateName(userId, newName);
+
+        System.out.print("New email (leave blank to skip): ");
+        String newEmail = sc.nextLine().trim();
+        if (!newEmail.isEmpty()) profile.updateEmail(userId, newEmail);
+
+        System.out.print("New password (leave blank to skip): ");
+        String newPwd = sc.nextLine().trim();
+        if (!newPwd.isEmpty()) profile.changePassword(userId, newPwd);
+
+        User u = userService.findById(userId);
+        System.out.println("Updated:");
+        System.out.println("Name: " + u.getName());
+        System.out.println("Email: " + u.getEmail());
 
         sc.close();
     }
